@@ -1,0 +1,17 @@
+---
+title: "The Mayans Were Right"
+description: |
+  Welcome to the website. I hope you enjoy it! Or maybe not. I really do not care about your life. Or maybe I do, and I'm just gaslighting you. Whatever. Welcome.
+  
+  More stuff written just to check the commit issue. 
+site: distill::distill_website
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+# Learn more about creating websites with Distill at:
+# https://rstudio.github.io/distill/website.html
+
+```
+
