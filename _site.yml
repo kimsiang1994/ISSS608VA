@@ -1,7 +1,7 @@
 name: "ISSS608VA"
-title: "The Mayans Were Right"
+title: "Kim Siang's Visual Analytics Journey"
 description: |
-  The Mayans Were Right
+  Kim Siang's Visual Analytics Journey
 output_dir: "_site"
 navbar:
   left: 
