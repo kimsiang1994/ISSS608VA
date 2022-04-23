@@ -1,9 +1,9 @@
 ---
-title: "The Mayans Were Right"
+title: "Kim Siang's Visual Analytics Journey"
 description: |
-  Welcome to the website. I hope you enjoy it! Or maybe not. I really do not care about your life. Or maybe I do, and I'm just gaslighting you. Whatever. Welcome.
+  Welcome to the website. I hope you enjoy reading my material as much as I enjoyed creating it. 
   
-  More stuff written just to check the commit issue. 
+  If ever in doubt, stop. 
 site: distill::distill_website
 ---
 
