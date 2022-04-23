@@ -4,6 +4,15 @@ description: |
   The Mayans Were Right
 output_dir: "_site"
 navbar:
+  left: 
+    - text: "Take-home Exercise"
+      menu: 
+      - text: "Take-home Exercise 1"
+        href: "takehome_exercise/takehome_exercise_1.html"
+    - text: "Datavis Makeover"
+      menu:
+      - text: "Datavis Makeover 1"
+        href: ""
   right:
     - text: "Home"
       href: index.html
