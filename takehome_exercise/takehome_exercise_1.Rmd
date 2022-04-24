@@ -94,35 +94,11 @@ ggplot(data = participant_data,
 ```
 It's nice to know that most people are happier than 0.45. 
 
-# Further Exploratory Chart
+# Further Analysis
+I think the most interesting thing to understand here is what determines whether or not one has kids. However, given my personal time constraint, I will leave this to further exploration in future exercises. More specifically, I will like to find the correlation between *haveKids* and *educationLevel*, *interestGroup* and *joviality.* 
 
-I think the most interesting thing to understand here is what determines whether or not one has kids. To do that, I will like to draw a regression line. 
 
-The factors I will like to compare against are *educationLevel*, *interestGroup* and *joviality.* 
 
-**haveKids vs educationLevel**
-```{r echo = FALSE}
-ggplot(data = participant_data, 
-       aes(x = educationLevel,
-           colour = haveKids)) + 
-  geom_bar()
-```
-
-**haveKids vs interestGroup**
-```{r echo = FALSE}
-ggplot(data = participant_data, 
-       aes(x = interestGroup,
-           colour = haveKids)) + 
-  geom_bar()
-```
-
-**haveKids vs joviality**
-```{r echo = FALSE}
-ggplot(data = participant_data, 
-       aes(x = joviality,
-           colour = haveKids)) + 
-  geom_bar()
-```
 
 
 
