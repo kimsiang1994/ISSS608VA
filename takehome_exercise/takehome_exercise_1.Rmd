@@ -1,7 +1,8 @@
 ---
 title: "Take-Home Exercise 1"
 description: |
-  In this Takehome Exercise, I will explore...
+  I try to identify key traits within the Participant data, and also identify relationships between the factors. 
+  
 author:
   - name: Yeo Kim Siang
     url: https://www.linkedin.com/in/kim-siang-yeo-b42317134/
@@ -16,13 +17,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Overview
 
-In this take-home exercise, you are required to apply ... 
+In this [takehome exercise](https://isss608-ay2021-22april.netlify.app/th_ex/th_ex01), I apply the skills I have learned in Lesson 1 and Hands-on Exercise 1 to reveal the demographic of the city of Engagement, Ohio USA by using appropriate static statistical graphics methods. 
 
 # Getting Started 
 
-Before we get started, ...
-
-Otherwise the code chunk below will do the trick. 
+Before we get started, I download tidyverse with the code chunk below
 
 ```{r}
 packages = c('tidyverse')
@@ -37,23 +36,93 @@ for (p in packages){
 
 # Importing Data 
 
-The code chunk below imports *Participants.csv* from the data sub-folder into R by using [`read_csv()`](https://www.rdocumentation.org/packages/readr/versions/1.3.1) of [**readr**](https://www.rdocumentation.org/packages/readr/versions/1.3.1), and saves it as a tibble dataframe called *participant_data*. 
+The code chunk below imports *Participants.csv* from the data sub-folder into R by using`read_csv()` of [**readr**](https://www.rdocumentation.org/packages/readr/versions/1.3.1), and saves it as a tibble dataframe called *participant_data*. 
 
 ```{r}
 participant_data <- read_csv("data/Participants.csv")
 ```
 
-# Simple Data Chart
+# Simple Exploratory Chart
 
-The code chunk below plots a bar chart by using geom_bar() of ggplot2. 
+I'd like to start by understanding the variables *householdSize*, *haveKids*, *age*, *educationLevel*, *interestGroup* and *joviality*. We leave participantId out because it provides no additional information and is mainly used as an identifier. To do that, I create a barplot for each one, except for *joviality*. That's because the first few factors tend to be discrete, while the last is more continuous. 
 
-```{r}
+**householdSize**
+```{r echo = FALSE}
+ggplot(data = participant_data, 
+       aes(x = householdSize)) + 
+  geom_bar()
+```
+It's nice to know that we have a lower limit of 1 and an upper limit of 3 members, in terms of household size. 
+
+**haveKids**
+```{r echo = FALSE}
+ggplot(data = participant_data, 
+       aes(x = haveKids)) + 
+  geom_bar()
+```
+Less people have kids. 
+
+**age**
+```{r echo = FALSE}
+ggplot(data = participant_data, 
+       aes(x = age)) + 
+  geom_bar()
+```
+There doesn't seem to be a clear pattern here. Perhaps I could rearrange the data here in ascending order to have a better gauge. Or I could peg it against another variable to support a hypothesis. 
+
+**educationLevel**
+```{r echo = FALSE}
 ggplot(data = participant_data, 
        aes(x = educationLevel)) + 
   geom_bar()
 ```
+It's interesting to see that the bulk of of people are went to *HighSchoolOrCollege* which is quite confusing since College and Bachelors mean that same thing. 
 
+**interestGroup** 
+```{r echo = FALSE}
+ggplot(data = participant_data, 
+       aes(x = interestGroup)) + 
+  geom_bar()
+```
+Again not the most helpful. I'll definitely have to peg it against another variable to give this variable more meaning. 
 
+**joviality**
+```{r echo = FALSE}
+ggplot(data = participant_data, 
+       aes(x = joviality)) + 
+  geom_density()
+```
+It's nice to know that most people are happier than 0.45. 
+
+# Further Exploratory Chart
+
+I think the most interesting thing to understand here is what determines whether or not one has kids. To do that, I will like to draw a regression line. 
+
+The factors I will like to compare against are *educationLevel*, *interestGroup* and *joviality.* 
+
+**haveKids vs educationLevel**
+```{r echo = FALSE}
+ggplot(data = participant_data, 
+       aes(x = educationLevel,
+           colour = haveKids)) + 
+  geom_bar()
+```
+
+**haveKids vs interestGroup**
+```{r echo = FALSE}
+ggplot(data = participant_data, 
+       aes(x = interestGroup,
+           colour = haveKids)) + 
+  geom_bar()
+```
+
+**haveKids vs joviality**
+```{r echo = FALSE}
+ggplot(data = participant_data, 
+       aes(x = joviality,
+           colour = haveKids)) + 
+  geom_bar()
+```
 
 
 
