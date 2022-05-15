@@ -60,7 +60,7 @@ The packages required are tidyverse, trelliscopejs, ggplot2, and gapminder.
 The code chunk below is used to install and load the required packages onto RStudio.
 
 ```{r}
-packages = c('tidyverse', 'trelliscopejs', 'ggplot2', 'gapminder', 'lubridate', 'dplyr', 'plotly')
+packages = c('tidyverse', 'trelliscopejs', 'ggplot2', 'gapminder', 'lubridate', 'dplyr', 'plotly', 'ggdist', 'reshape')
 for(p in packages){
   if(!require(p,character.only = T)){
     install.packages(p)
@@ -336,7 +336,7 @@ We now have an understanding of the income and expenses of participants in Engag
 
 1.  There seem to be "dud" values where the participant just trails off and does not have any income or expense information over some period of time. And in most cases, once the participant trails off, no new data will be found. In the case of income, it could mean that the participant has stopped working. In the case of expense, a stop in recreation expense is fine. However, it is difficult to account for a stop in shelter, education and especially food expense.
 
-2.  Income is constant for almost all participants. So is education expense and shelter expense. Hence, most volatity in a participant's available balance will be due to changes in other expenses.
+2.  Income is constant for almost all participants. So is education expense and shelter expense. Hence, most volatility in a participant's available balance will be due to changes in other expenses.
 
 3.  The exploration so far does not investigate the relationship between income and expense.
 
@@ -716,4 +716,107 @@ plot_ly(
 
 ![](images/paste-78A2AE8D.png)
 
-Next up, I will like to get create a concrete visualisation on the range of values for total, average, maximum and minimum income, expense and balance. We do that using the code chunks below.
+Next up, I will like to get the summary statistics for total, average, maximum and minimum income, expense and balance. We do that using the code chunks below.
+
+```{r}
+# Getting summary statistics for total
+summary(completeDataframeFinal)
+```
+
+![](images/paste-42B793D8.png)
+
+```{r}
+# Getting summary statistics for average
+summary(completeDataframeAvgFinal)
+```
+
+![](images/paste-06D32CAF.png)
+
+```{r}
+# Getting summary statistics for max
+summary(completeDataframemaxFinal)
+```
+
+![](images/paste-A480F79F.png)
+
+```{r}
+# Getting summary statistics for min
+summary(completeDataframeminFinal)
+```
+
+![](images/paste-65061714.png)
+
+### Questions 3
+
+To identify a pattern, we have to base the data on a solid basis of comparison. Since the crux of this question lies in a participant's financial health, I will like to use each participant's balance over time. To make it easier for me to see any form of pattern, I will use a heatmap.
+
+We start by renaming the columns of *allBalance* using the code chunk below.
+
+```{r}
+names(allBalance) <- c('participantId', 'timestamp', 'balance')
+```
+
+Then we build a heat map for each partipant overtime using the code chunk below, by taking reference from the official [RPubs guidelines](https://rpubs.com/ab604/98032)
+
+```{r}
+ggplot(allBalance, 
+              aes(timestamp, participantId)) +            
+  geom_tile(aes(fill = balance))
+
+balanceHeatMap    
+
+ggsave("heatmap.png")
+```
+
+![](images/paste-3C859EEE.png)
+
+## Addressing Questions
+
+### Question 1 and 2
+
+Just to recap, these are the questions.
+
+*1. How does the financial health of the residents change over the period covered by the dataset?*
+
+*2. How do wages compare to the overall cost of living in Engagement?*
+
+![](images/paste-AF5B3453.png)
+
+*Answering Question 1*
+
+On average, participant financial health is consistently positive and subject to the frequent drop because of a spike in expense.
+
+*Answering Question 2*
+
+On average, wage is higher than overall expense. Also, wage is more consistent and expense is more volatile. This is attributed to all expenses other than education expense and shelter expense, as these 2 expenses are also rather steady for every participant.
+
+![](images/paste-049E6ED4.png)
+
+*Answering Question 1*
+
+If we assume that the richest participants have both the highest income and highest expense, then the graph above can be a reflection of the richest participants. In general, the richest participants never face a loss, and know how to minimise their expense spikes.
+
+*Answering Question 2*
+
+The richer participants know how to keep their income high while moderating the volatility that is commonly associated with expense.
+
+![](images/paste-78A2AE8D.png)
+
+*Answering Question 1*
+
+If we assume that the poorest participants have the lowest income and expense, then we see that they are consistently earning bare minimum or in debt. In addition, they are hit harder than the average during the spikes in expense.
+
+*Answering Question 2*
+
+The poorer participants earn lower wages and incur more expense. This could keep them in a poverty cycle.
+
+### Question 3
+
+*Are there groups that appear to exhibit similar patterns?*
+
+![](images/paste-216C31FA.png)
+
+Admittedly, the current heatmap does not solve the problem. **A lot more** has to be done, and I will continue to work on this over time. More specifically, I will like to
+
+1.  Use clustering algorithms to group the participants.
+2.  Make the heatmap interactive (which I tried to with *d3heatmap* but there was once again a memory error) so that the user can zoom in and and out, as well as change the number of participants to compare.
