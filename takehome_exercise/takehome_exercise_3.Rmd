@@ -434,3 +434,7 @@ Also, most variance seems to come from occasional changes in balance.
 ![](images/paste-BE1B6A66.png)
 
 While i cannot tell as much from these tables, it is important to note that some people do go into debt. The lowest balance is \$-1335.67 while the highest balance is \$4081.58.
+
+# Visual Solutioning
+
+
