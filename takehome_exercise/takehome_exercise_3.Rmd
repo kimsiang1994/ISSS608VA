@@ -128,6 +128,12 @@ wageIncome <- filter(financialJournal, category == 'Wage')
 head(wageIncome)
 ```
 
+```{r}
+# Adding this for quick run
+wageIncome <- filter(financialJournal, category == 'Wage')
+head(wageIncome)
+```
+
 Lastly, I create individual Trelliscopejs plots for each category using the follow code chunks. I run them individually to make it easier to see which is which.
 
 ```{r, eval = FALSE}
@@ -226,7 +232,7 @@ qplot(timestamp, amount, data = allExpense) +
                     self_contained = TRUE)
 ```
 
-# Basic Insights
+# Insights
 
 ## Income
 
@@ -323,3 +329,108 @@ However, there are also cases where there is more than one change in shelter exp
 ![](images/paste-E2C25D3B.png)
 
 In general, shelter expense seems to follow a normal distribution with the maximum expense being \$1556.36 and the minimum expense being \$231.71.
+
+## Basic Conclusion and Steps Moving Forward
+
+We now have an understanding of the income and expenses of participants in Engagmement.
+
+1.  There seem to be "dud" values where the participant just trails off and does not have any income or expense information over some period of time. And in most cases, once the participant trails off, no new data will be found. In the case of income, it could mean that the participant has stopped working. In the case of expense, a stop in recreation expense is fine. However, it is difficult to account for a stop in shelter, education and especially food expense.
+
+2.  Income is constant for almost all participants. So is education expense and shelter expense. Hence, most volatity in a participant's available balance will be due to changes in other expenses.
+
+3.  The exploration so far does not investigate the relationship between income and expense.
+
+# More Exploration
+
+I focus on evaluating the difference between income and expense here.
+
+## Getting Data
+
+The goal here is to create a dataframe with expense, income and balance.
+
+First, we convert the *wageIncome* dataframe so that it uses the same timestamps as the *allExpense* dataframe using the code chunk below.
+
+```{r}
+# Create a new data.frame with the newly formatted date field
+wageIncome <- wageIncome %>%
+  mutate(timestamp = as.Date(timestamp, format = "%m/%d/%y"))
+head(wageIncome)
+```
+
+We change the column names too with the following code chunk. Also, we need to find out if they have the same number of rows
+
+```{r}
+colnames(wageIncome) <- c('participantId','timestamp','income', 'incomeAmount')
+
+colnames(allExpense) <- c('participantId','timestamp','expenseAmount')
+
+nrow(wageIncome)
+nrow(allExpense)
+```
+
+We also group all wages so that there is at most 1 wage datapoint for each timestamp.
+
+```{r}
+# Create a new data.frame with the newly formatted date field
+wageIncome <- wageIncome %>%
+  group_by(participantId, timestamp) %>%
+  summarise(incomeAmount = sum(incomeAmount, na.rm = TRUE)) 
+```
+
+Now we create a completely new dataframe using the *wageIncome* and *allExpense* dataframes with the code chunk below.
+
+```{r}
+# Given that wageIncome has more rows, we left-join into that
+
+incomeAndExpenseTable <- merge(x = wageIncome, y = allExpense, c("participantId", "timestamp"), all.x = TRUE)
+head(incomeAndExpenseTable)
+```
+
+Lastly, we add a balance column to the datafame.
+
+```{r}
+incomeAndExpenseTable <- incomeAndExpenseTable %>% 
+  mutate(balance = incomeAmount + expenseAmount)
+head(incomeAndExpenseTable)
+```
+
+To create a Trelliscopejs plot for each participant's balance, we first create a dataet for balance
+
+```{r}
+# Get all balance related data
+allBalance <- data.frame(incomeAndExpenseTable$participantId, incomeAndExpenseTable$timestamp, incomeAndExpenseTable$balance)
+head(allBalance)
+```
+
+Now, we create the Trelliscopejs plot.
+
+```{r, eval=FALSE}
+# For total expense
+qplot(incomeAndExpenseTable.timestamp, incomeAndExpenseTable.balance, data = allBalance) +
+  theme_bw() +
+  facet_trelliscope(~ incomeAndExpenseTable.participantId, 
+                    nrow = 2, 
+                    ncol = 5, 
+                    path = "trellisbal/", 
+                    self_contained = TRUE)
+```
+
+# More Insights
+
+## Balance
+
+![](images/paste-6A4C90AA.png)
+
+Balance seems to have a uniform distribution for each participant.
+
+![](images/paste-6FA28F10.png)
+
+This backed up by the low variance as variance tends to center around 0.
+
+![](images/paste-3104691A.png)
+
+Also, most variance seems to come from occasional changes in balance.
+
+![](images/paste-BE1B6A66.png)
+
+While i cannot tell as much from these tables, it is important to note that some people do go into debt. The lowest balance is \$-1335.67 while the highest balance is \$4081.58.

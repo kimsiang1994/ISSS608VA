@@ -3,7 +3,6 @@ title: "Kim Siang's Visual Analytics Journey"
 description: |
   Welcome to the website. I hope you enjoy reading my material as much as I enjoyed creating it. 
   
-  If ever in doubt, stop. 
 site: distill::distill_website
 ---
 
