@@ -12,7 +12,7 @@ output: distill::distill_article
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE, message = FALSE, warning = FALSE)
 ```
 
 # The Task
@@ -60,7 +60,7 @@ The packages required are tidyverse, trelliscopejs, ggplot2, and gapminder.
 The code chunk below is used to install and load the required packages onto RStudio.
 
 ```{r}
-packages = c('tidyverse', 'trelliscopejs', 'ggplot2', 'gapminder', 'lubridate', 'dplyr')
+packages = c('tidyverse', 'trelliscopejs', 'ggplot2', 'gapminder', 'lubridate', 'dplyr', 'plotly')
 for(p in packages){
   if(!require(p,character.only = T)){
     install.packages(p)
@@ -437,4 +437,283 @@ While i cannot tell as much from these tables, it is important to note that some
 
 # Visual Solutioning
 
+To recap the 3 questions again, they are:
 
+*1. How does the financial health of the residents change over the period covered by the dataset?*
+
+*2. How do wages compare to the overall cost of living in Engagement?*
+
+*3. Are there groups that appear to exhibit similar patterns? Describe your rationale for your answers.*
+
+## Graph Creation
+
+### Questions 1 and 2
+
+Questions 1 and 2 seem to be the most straightforward, and can be quickly visualised with a multi-line plot using the dataframe *incomeAndExpenseTable* and its variants.
+
+Let us create 3 plots, one for income, expense and balance, using the code chunks below.
+
+```{r}
+# Dynamic plot for income
+
+plot_ly(
+  data = incomeAndExpenseTable, 
+  x = ~timestamp, 
+  y = ~incomeAmount,  
+  type = "scatter", 
+  mode = "lines", 
+  color = ~participantId) %>%
+  layout(title = 'Income for all Participants in Engagememt over time', 
+         xaxis = list(
+    range = c(as.numeric(as.POSIXct("2022-03-01", format="%Y-%m-%d"))*1000, as.numeric(as.POSIXct("2022-11-05", format="%Y-%m-%d"))*1000),
+    type = "date"))
+```
+
+*Note: Adding the static screenshot as I was facing memory issues during knit*
+
+![](images/paste-F097C399.png)
+
+```{r}
+# Dynamic plot for expense
+
+plot_ly(
+  data = incomeAndExpenseTable, 
+  x = ~timestamp, 
+  y = ~expenseAmount,  
+  type = "scatter", 
+  mode = "lines", 
+  color = ~participantId) %>%
+  layout(title = 'Expense for all Participants in Engagememt over time', 
+         xaxis = list(
+    range = c(as.numeric(as.POSIXct("2022-03-01", format="%Y-%m-%d"))*1000, as.numeric(as.POSIXct("2022-11-05", format="%Y-%m-%d"))*1000),
+    type = "date"))
+```
+
+*Note: Adding the static screenshot as I was facing memory issues during knit*
+
+![](images/paste-DFCDB005.png)
+
+```{r}
+# Dynamic plot for balance 
+
+plot_ly(
+  data = incomeAndExpenseTable, 
+  x = ~timestamp, 
+  y = ~balance,  
+  type = "scatter", 
+  mode = "lines", 
+  color = ~participantId) %>%
+  layout(title = 'Balance for all Participants in Engagememt over time', 
+         xaxis = list(
+    range = c(as.numeric(as.POSIXct("2022-03-01", format="%Y-%m-%d"))*1000, as.numeric(as.POSIXct("2022-11-05", format="%Y-%m-%d"))*1000),
+    type = "date"))
+```
+
+*Note: Adding the static screenshot as I was facing memory issues during knit*
+
+![](images/paste-16B77A97.png)
+
+Honestly, there are too many data points and this is just a hot mess. I try to aggregrate and plot the average, minimum, maximum and total value for each over time by first creating new datasets with the code chunk below.
+
+```{r}
+# Creating data frame for total income against time
+totalIncome <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(totalIncome = sum(incomeAmount, na.rm = TRUE))
+head(totalIncome)
+
+# Creating data frame for total expense against time
+totalExpense <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(totalExpense = sum(expenseAmount, na.rm = TRUE))
+head(totalExpense)
+
+# Creating data frame for total balance against time
+totalBalance <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(totalBalance = sum(balance, na.rm = TRUE))
+head(totalBalance)
+```
+
+I also merge the dataframes because I will like to use the plotly *add_trace* function to plot all 3 dataframes on the same plotly graph.
+
+```{r}
+#First we multiply totalExpense by -1 to get the absolute value. This will make comparison in the plotly graph easier.
+
+totalExpense$totalExpense <- totalExpense$totalExpense * -1
+head(totalExpense)
+
+completeDataframe <- merge(x = totalIncome, y = totalExpense, c("timestamp"), all.x = TRUE)
+
+completeDataframeFinal <- merge(x = completeDataframe, y = totalBalance, c("timestamp"), all.x = TRUE)
+
+head(completeDataframeFinal)
+```
+
+Now, we create an interactive multi-line plot for *completeDataframeFinal*
+
+```{r}
+plot_ly(
+  data = completeDataframeFinal, 
+  x = ~timestamp, 
+  y = ~totalIncome, 
+  name = 'totalIncome',
+  type = "scatter", 
+  mode = "lines"
+) %>% 
+  add_trace(y = ~totalExpense, 
+            name = 'totalExpense') %>% 
+  add_trace(y = ~totalBalance, 
+            name = 'totalBalance') %>%
+  layout(title = 'Total for all Participants in Engagememt over time', 
+         yaxis = list(title = 'Amount'))
+```
+
+*Note: Adding the static screenshot as I was facing memory issues during knit*
+
+![](images/paste-7063B0C2.png)
+
+Let us do the same for average, maximum and minimum values using the code chunks below.
+
+```{r}
+# Creating plotly graph for average
+
+avgIncome <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(avgIncome = mean(incomeAmount, na.rm = TRUE))
+# head(avgIncome)
+
+avgExpense <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(avgExpense = mean(expenseAmount, na.rm = TRUE))
+# head(avgExpense)
+
+avgBalance <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(avgBalance = mean(balance, na.rm = TRUE))
+# head(avgBalance)
+
+avgExpense$avgExpense <- avgExpense$avgExpense * -1
+# head(avgExpense)
+
+completeDataframeAvg <- merge(x = avgIncome, y = avgExpense, c("timestamp"), all.x = TRUE)
+
+completeDataframeAvgFinal <- merge(x = completeDataframeAvg, y = avgBalance, c("timestamp"), all.x = TRUE)
+
+# head(completeDataframeAvgFinal)
+
+plot_ly(
+  data = completeDataframeAvgFinal, 
+  x = ~timestamp, 
+  y = ~avgIncome, 
+  name = 'avgIncome',
+  type = "scatter", 
+  mode = "lines"
+) %>% 
+  add_trace(y = ~avgExpense, 
+            name = 'avgExpense') %>% 
+  add_trace(y = ~avgBalance, 
+            name = 'avgBalance') %>%
+  layout(title = 'Average for all Participants in Engagememt over time', 
+         yaxis = list(title = 'Amount'))
+```
+
+*Note: Adding the static screenshot as I was facing memory issues during knit*
+
+![](images/paste-4225EA4B.png)
+
+```{r}
+# Creating plotly graph for maximum
+
+maxIncome <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(maxIncome = max(incomeAmount, na.rm = TRUE))
+# head(maxIncome)
+
+maxExpense <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(maxExpense = max(expenseAmount, na.rm = TRUE))
+# head(maxExpense)
+
+maxBalance <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(maxBalance = max(balance, na.rm = TRUE))
+# head(maxBalance)
+
+maxExpense$maxExpense <- maxExpense$maxExpense * -1
+# head(maxExpense)
+
+completeDataframemax <- merge(x = maxIncome, y = maxExpense, c("timestamp"), all.x = TRUE)
+
+completeDataframemaxFinal <- merge(x = completeDataframemax, y = maxBalance, c("timestamp"), all.x = TRUE)
+
+# head(completeDataframemaxFinal)
+
+plot_ly(
+  data = completeDataframemaxFinal, 
+  x = ~timestamp, 
+  y = ~maxIncome, 
+  name = 'maxIncome',
+  type = "scatter", 
+  mode = "lines"
+) %>% 
+  add_trace(y = ~maxExpense, 
+            name = 'maxExpense') %>% 
+  add_trace(y = ~maxBalance, 
+            name = 'maxBalance') %>%
+  layout(title = 'Max for all Participants in Engagememt over time', 
+         yaxis = list(title = 'Amount'))
+```
+
+*Note: Adding the static screenshot as I was facing memory issues during knit*
+
+![](images/paste-049E6ED4.png)
+
+```{r}
+# Creating plotly graph for minimum
+minIncome <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(minIncome = min(incomeAmount, na.rm = TRUE))
+# head(minIncome)
+
+minExpense <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(minExpense = min(expenseAmount, na.rm = TRUE))
+# head(minExpense)
+
+minBalance <- incomeAndExpenseTable %>%
+  group_by(timestamp) %>%
+  summarise(minBalance = min(balance, na.rm = TRUE))
+# head(minBalance)
+
+minExpense$minExpense <- minExpense$minExpense * -1
+# head(minExpense)
+
+completeDataframemin <- merge(x = minIncome, y = minExpense, c("timestamp"), all.x = TRUE)
+
+completeDataframeminFinal <- merge(x = completeDataframemin, y = minBalance, c("timestamp"), all.x = TRUE)
+
+# head(completeDataframeminFinal)
+
+plot_ly(
+  data = completeDataframeminFinal, 
+  x = ~timestamp, 
+  y = ~minIncome, 
+  name = 'minIncome',
+  type = "scatter", 
+  mode = "lines"
+) %>% 
+  add_trace(y = ~minExpense, 
+            name = 'minExpense') %>% 
+  add_trace(y = ~minBalance, 
+            name = 'minBalance') %>%
+  layout(title = 'Minimum for all Participants in Engagememt over time', 
+         yaxis = list(title = 'Amount'))
+
+```
+
+*Note: Adding the static screenshot as I was facing memory issues during knit*
+
+![](images/paste-78A2AE8D.png)
+
+Next up, I will like to get create a concrete visualisation on the range of values for total, average, maximum and minimum income, expense and balance. We do that using the code chunks below.
