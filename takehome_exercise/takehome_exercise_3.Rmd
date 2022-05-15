@@ -12,7 +12,7 @@ output: distill::distill_article
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE, message = FALSE, warning = FALSE, fig.retina = 3)
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
 ```
 
 # The Task
@@ -21,65 +21,33 @@ This [takehome exercise](https://isss608-ay2021-22april.netlify.app/th_ex/th_ex0
 
 ![](images/paste-94A350AA.png)
 
-You can find the links to then datasets [here](https://vast-challenge.github.io/2022/). 
+You can find the links to then datasets [here](https://vast-challenge.github.io/2022/).
 
 # Chosen Question
 
-My analysis will focus on the Question 2 - "How does the financial health of the residents change over the period covered by the dataset? How do wages compare to the overall cost of living in Engagement? Are there groups that appear to exhibit similar patterns? Describe your rationale for your answers. Limit your response to 10 images and 500 words."
+My analysis will focus on the Question 2.
+
+*"How does the financial health of the residents change over the period covered by the dataset? How do wages compare to the overall cost of living in Engagement? Are there groups that appear to exhibit similar patterns? Describe your rationale for your answers. Limit your response to 10 images and 500 words."*
 
 # Approach
 
-In my opinion, each sub-opinion can have both an "obvious" answer, or a metric that is readily available in the data, and a "derived" answer, one that gathers multiple data points to triangulate the information needed. I will try to get bot types of answers. 
+I will focus on the dataset *FinancialJournal* since it contains all the information I need.
 
-## Sub-Question 1 
-"How does the financial health of the residents change over the period covered by the dataset?" 
+To guide my exploration, I will remove all ambiguity by defining what financial health means.
 
-### "Obvious" Answer
+Financial health is defined as a state of
 
-We evaluate the the "financialStatus" column in the datasets classified under *ParticipantStatusLogs.* 
+1.  A steady flow of income To determine this, we can use the "Category" called "Wage" from the dataset *FinancialJournal.*
 
-### "Derived" Answer
-To solve this question, I define what financial health meant, and build a granular visual understanding of each part of the "equation" so that the user has a fuller understanding of the financial health of residents in Engagement. 
+2.  Rare changes in expenses To determine this, we can use the "Category" called "Education", "Food", "Recreation" and "Shelter" from the dataset *FinancialJournal.*
 
-Financial health is defined as a state of 
+3.  A cash balance that is growing. To determine this, we can use the difference between income and the different types of costs in the dataset *FinancialJournal.*
 
-1. A steady flow of income
-To determine this, we can use the "Category" called "Wage" from the dataset *FinancialJournal.* 
+I will use Trellisplotjs to survey the data and pick out on certain peculiarties.
 
-2. Rare changes in expenses
-To determine this, we can use the "Category" called "Education", "Food", "Recreation" and "Shelter" from the dataset *FinancialJournal.* 
+Based on the insights discovered, I will try to create a unifying visualisation solution.
 
-3. A cash balance that is growing. 
-To determine this, we can use the "availableBalance" and "weeklyExtraBudget" from *ParticipantStatusLogs.* 
-
-## Sub-Question 2 
-"How do wages compare to the overall cost of living in Engagement?" 
-
-### "Obvious"/ "Derived" Answer
-
-We can use the "Derived" Answer from Sub-Question 1. Which does hint that the right way to answer Sub-Question 1 would be to use its "Obvious" answer. 
-
-It might also give us a hint at the type of visual storytelling we should be doing with this question. Sub-Question 1 could give us a macro view on the issue, while Sub-Question 2 allows us to explore the issue in detail. 
-
-## Sub-Question 3
-
-Are there groups that appear to exhibit similar patterns?
-
-### Obvious Answer
-
-Given that we are ultimately weighing the living costs against income, it would make sense to categorise the participants based on either and their sub-components. 
-
-On the income side, this would largely mean categorising based on how much the participant brings in, and the number of hours worked. 
-
-On the cost of living side, this would mean categorising baesd on the proportion of income he or she spends on each type of expense: "Education", "Food", "Recreation" and "Shelter". 
-
-On the side of considering both income and cost of living, this would mean categorising them into savers - or people with more income than expense, and spenders - people with more expense than income. 
-
-### Derived Answer
-
-We could use academic papers as a guide to determine how people should be categorised. However, Prof Kam has noted that this is more data-directed instead of explorative. In my opinion, that means that I would be skewing the user's exploration by skewing the "type" of person they can derive. Hence, I will veer away from this direction.
-
-# Exploration
+# Basic Exploration
 
 Having locked down our approach, we use it as a guide to explore the data using [R for Data Science](https://r4ds.had.co.nz/exploratory-data-analysis.html) as a guide.
 
@@ -87,12 +55,12 @@ Having locked down our approach, we use it as a guide to explore the data using 
 
 ### Getting Packages
 
-The packages required are tidyverse (included relevant packages for data analyses such as ggplot2, readr and dplyr), readxl, ggrepel and knitr.
+The packages required are tidyverse, trelliscopejs, ggplot2, and gapminder.
 
 The code chunk below is used to install and load the required packages onto RStudio.
 
 ```{r}
-packages = c('tidyverse')
+packages = c('tidyverse', 'trelliscopejs', 'ggplot2', 'gapminder', 'lubridate', 'dplyr')
 for(p in packages){
   if(!require(p,character.only = T)){
     install.packages(p)
@@ -101,103 +69,257 @@ for(p in packages){
 }
 ```
 
-### Getting Data 
+### Getting Data
 
-The main datasets needed are: *ParticipantStatusLogs* and *FinancialJournal.* Since both datasets are in CSV format, we use the read_csv() of the readr package is used to import the data. 
-
-This is a trivial task for "FinancialJournal" since there is only 1 CSV file. 
+The main dataset used is *FinancialJournal.* We use the read_csv() of the readr package is used to import the data.
 
 ```{r}
 financialJournal <- read_csv("data/FinancialJournal.csv")
 glimpse(financialJournal)
 ```
 
-*Note: While I wanted to use ParticipantStatusLogs at first, the loading was impossible due to the size of the file and constantly threw memory errors. In addition, Prof Kam did mention that it was not priority for this question (in one of my group's meeting minutes). Hence, I decided to de-prioritise it. I did keep the steps below to document my work. *
-
-To combine the multiple sheets used to store *ParticipantStatusLogs*, we can use the following [method 1](https://www.statology.org/r-merge-csv-files/) or [method 2](https://stackoverflow.com/questions/30242065/trying-to-merge-multiple-csv-files-in-r). 
-
-```{r, eval=FALSE}
-# Do note that participantStatusLogs only uses 5 inputs for now.
-
-filenames <- list.files(path="data/psl2", full.names=TRUE)
-
-#read the files in as plaintext
-csv_list <- lapply(filenames , readLines)
-
-#remove the header from all but the first file
-csv_list[-1] <- sapply(csv_list[-1], "[", 2)
-
-#unlist to create a character vector
-csv_list <- unlist(csv_list)
-
-#write the csv as one single file
-writeLines(text=csv_list, con="all_my_csvs_combined.csv")
-
-#read the csv as one single file
-participantStatusLogs <- read.csv("all_my_csvs_combined.csv")
-
-glimpse(participantStatusLogs)
-```
-
-However, do note that it might not work as well or the code might take too long to run, especially when there are too many CSV files to combine. This was the case for me. You may consult the following [website](https://www.ablebits.com/office-addins-blog/merge-multiple-csv-files-excel/) to combine your CSV files in another way. After you do so, you can create the same dataset using the code below. 
-
-```{r, eval=FALSE}
-participantStatusLogs <- read_csv("data/combinedParticipantStatusLogs.csv")
-glimpse(participantStatusLogs)
-```
-
-After a few local runs, I realised that the file might be too huge to upload on Git. Instead, I used RDS as a workaround. 
-
-```{r, eval=FALSE}
-saveRDS(participantStatusLogs, 'data/participantStatusLogs.rds')
-participantStatusLogs2 <- readRDS('data/participantStatusLogs.rds')
-head(participantStatusLogs)
-```
-
-We also add in a few other datasets that might be related. 
+We also convert the data into RDS format since it exceeded Git's recommended memory limits.
 
 ```{r}
-apartments <- read_csv("data/Apartments.csv")
-glimpse(apartments)
-
-buildings <- read_csv("data/Buildings.csv")
-glimpse(buildings)
-
-checkInJournal <- read_csv("data/CheckInJournal.csv")
-glimpse(checkInJournal)
-
-jobs <- read_csv("data/Jobs.csv")
-glimpse(jobs)
-
-participants <- read_csv("data/Participants.csv")
-glimpse(jobs)
-
-pubs <- read_csv("data/Pubs.csv")
-glimpse(pubs)
-
-restaurants <- read_csv("data/Restaurants.csv")
-glimpse(restaurants)
-
-schools <- read_csv("data/Schools.csv")
-glimpse(schools)
-
-travelJournal <- read_csv("data/TravelJournal.csv")
-glimpse(schools)
+saveRDS(financialJournal, 'data/financialJournal.rds')
+financialJournal <- readRDS('data/financialJournal.rds')
+head(financialJournal)
 ```
-### Getting Data 
 
-There are pros and cons to the current dataset. The pro being that all the information is collated in one place and hence we can conduct statistical reasoning of the sample easily. The con being that it might be difficult to isolate just 1 participant at a time. 
+## Getting Trelliscopejs
 
-## Sub-Question 1 
+Instead of going through the trouble of mutating data and creating facet plots, we use Trelliscopejs.
 
-We evaluate the the “financialStatus” column in the datasets classified under ParticipantStatusLogs.
+```{r, eval = FALSE}
+qplot(timestamp, amount, data = financialJournal) +
+  theme_bw() +
+  facet_trelliscope(~ participantId, 
+                    nrow = 2, 
+                    ncol = 5, 
+                    path = "trellis/", 
+                    self_contained = TRUE)
+```
 
-Given that there are multiple participants over a long period of time, I will like to use the following piece of information from [method](https://www.statology.org/r-merge-csv-files/). 
+![](images/paste-58D5F246.png)
 
-*"If you wish to overlay multiple histograms in the same plot, I recommend using geom_freqpoly() instead of geom_histogram(). geom_freqpoly() performs the same calculation as geom_histogram(), but instead of displaying the counts with bars, uses lines instead. It’s much easier to understand overlapping lines than bars."*
+The Trelliscopejs result from using the dataset *FinancialJournal* in full yielded a result that was not useful. That was because all categories were clunked together. Also, a quick look at the original CSV file shows that there were duplicate values.
+
+Instead, I manually cleaned the CSV file. Next, I created datasets for each category using the code chunk below.
 
 ```{r}
-ggplot(data = participantStatusLogs, mapping = aes(x = financialStatus, colour = participantId)) +
-  geom_freqpoly(binwidth = 0.1)
+# Creating sub-dataset for the category "Education"
+educationExpense <- filter(financialJournal, category == 'Education')
+head(educationExpense)
+
+# Creating sub-dataset for the category "Food"
+foodExpense <- filter(financialJournal, category == 'Food')
+head(foodExpense)
+
+# Creating sub-dataset for the category "Recreation"
+recreationExpense <- filter(financialJournal, category == 'Recreation')
+head(recreationExpense)
+
+# Creating sub-dataset for the category "Shelter"
+shelterExpense <- filter(financialJournal, category == 'Shelter')
+head(shelterExpense)
+
+# Creating sub-dataset for the category "Wage"
+wageIncome <- filter(financialJournal, category == 'Wage')
+head(wageIncome)
 ```
 
+Lastly, I create individual Trelliscopejs plots for each category using the follow code chunks. I run them individually to make it easier to see which is which.
+
+```{r, eval = FALSE}
+# For education expense
+qplot(timestamp, amount, data = educationExpense) +
+  theme_bw() +
+  facet_trelliscope(~ participantId, 
+                    nrow = 2, 
+                    ncol = 5, 
+                    path = "trellisedu/", 
+                    self_contained = TRUE)
+```
+
+```{r, eval = FALSE}
+# For food expense
+qplot(timestamp, amount, data = foodExpense) +
+  theme_bw() +
+  facet_trelliscope(~ participantId, 
+                    nrow = 2, 
+                    ncol = 5, 
+                    path = "trellisfd/", 
+                    self_contained = TRUE)
+```
+
+```{r, eval = FALSE}
+# For recreation expense
+qplot(timestamp, amount, data = recreationExpense) +
+  theme_bw() +
+  facet_trelliscope(~ participantId, 
+                    nrow = 2, 
+                    ncol = 5, 
+                    path = "trellisrec/", 
+                    self_contained = TRUE)
+```
+
+```{r, eval = FALSE}
+# For shelter expense
+qplot(timestamp, amount, data = shelterExpense) +
+  theme_bw() +
+  facet_trelliscope(~ participantId, 
+                    nrow = 2, 
+                    ncol = 5, 
+                    path = "trellisshel/", 
+                    self_contained = TRUE)
+```
+
+```{r, eval = FALSE}
+# For wage income
+qplot(timestamp, amount, data = wageIncome) +
+  theme_bw() +
+  facet_trelliscope(~ participantId, 
+                    nrow = 2, 
+                    ncol = 5, 
+                    path = "trelliswage/", 
+                    self_contained = TRUE)
+```
+
+I noticed that I was missing something huge. I did not calculate the sum of the expense of all participants in Engagement.
+
+First, I filter away all income data using the code chunk below.
+
+```{r}
+# Get all expense related data
+allExpense <- filter(financialJournal, !(category == 'Wage'))
+head(allExpense)
+```
+
+Then, I convert the timestamps into months using the code chunk below.
+
+```{r}
+# Create a new data.frame with the newly formatted date field
+allExpense <- allExpense %>%
+  mutate(timestamp = as.Date(timestamp, format = "%m/%d/%y"))
+head(allExpense)
+```
+
+Now, we sum all values in the *category* column.
+
+```{r}
+allExpense <- allExpense %>%
+  group_by(participantId, timestamp) %>%
+  summarise(amount = sum(amount, na.rm = TRUE))
+head(allExpense)
+```
+
+Lastly, I create a Trelliscopejs plot for that this too.
+
+```{r, eval = FALSE}
+# For total expense
+qplot(timestamp, amount, data = allExpense) +
+  theme_bw() +
+  facet_trelliscope(~ participantId, 
+                    nrow = 2, 
+                    ncol = 5, 
+                    path = "trellisexp/", 
+                    self_contained = TRUE)
+```
+
+# Basic Insights
+
+## Income
+
+![](images/paste-C5B24B61.png)
+
+Wage seems to largely follow a uniform distribution on a per-participant basis.
+
+![](images/paste-0659A885.png)
+
+![](images/paste-6108EF14.png)
+
+Most cases that are contributing to variance seem to be one-off changes in wages.
+
+![](images/paste-47600A96.png)
+
+However, there are also cases where the change in income is more constant.
+
+In general, the maximum income earned was \$4096.52 and the least amount earned was \$0.83.
+
+## Expense
+
+![](images/paste-47BA315B.png)
+
+![](images/paste-A937C3A5.png)
+
+Combining the expenses shows that in general, there is a baseline amount spent each day by the participants, punctured by high amounts of spending.
+
+![](images/paste-9B41A246.png)
+
+This supported by the overall average breakdown. Where each household spends at least some sort of money of value more than zero. We can tell this from the \*amount_max\* table because expense values are negative.
+
+Overall, the largest expense is \$1637.71 and the smallest expense is \$9.92 on average.
+
+### Education
+
+![](images/paste-D6B51B91.png)
+
+It looks like education expense follows a uniform distribution per participant.
+
+![](images/paste-F5C4C48F.png)
+
+And that it is always part of a participant's expense. A closer look show that it ranges from \$12.81 to \$91.14 on average.
+
+![](images/paste-3B29DA90.png)
+
+Lastly, it seems to be a one-time expense for certain users.
+
+### Food
+
+![](images/paste-85D0E649.png)
+
+It would be premature for me to determine any form of distribution here based on Trelliscopejs plot.
+
+![](images/paste-C1EB139F.png)
+
+That being said, it seems to centre around \$4.75 and have minimal variance. Also, the most spent on food is \$14.84 and the least spent is \$4.22 on average.
+
+![](images/paste-DAC18BE9.png)
+
+It is also interesting to note that food is a one-time expense for some participants.
+
+### Recreation
+
+![](images/paste-0B53B4CD.png)
+
+It would be premature for me to determine any form of distribution here based on Trelliscopejs plot.
+
+![](images/paste-1E0103D6.png)
+
+That being said, it seems to have 2 peaks and might follow a bimodal distribution. In this case, we can hypothesize that recreation is both a daily necessity as well as a once-in-awhile splurge for most participants. The largest amount spent on recreation is \$36.53 and the smallest amount spent is \$0.53 on average.
+
+![](images/paste-96180796.png)
+
+In addition, there are instances of participants where recreation is a one-time expense.
+
+### Shelter
+
+![](images/paste-43F6EB2E.png)
+
+In general, shelter seems to follow a uniform distribution per participant as well.
+
+![](images/paste-E336081B.png)
+
+That being said, it seems to have some sort of variance.
+
+![](images/paste-50C32482.png)
+
+Upon closer inspection, it seems to be because of a one-time upgrade by certain participants.
+
+![](images/paste-4713FE5A.png)
+
+However, there are also cases where there is more than one change in shelter expense. These participants could be renters. However, it is also to be noted that they are the minority.
+
+![](images/paste-E2C25D3B.png)
+
+In general, shelter expense seems to follow a normal distribution with the maximum expense being \$1556.36 and the minimum expense being \$231.71.
